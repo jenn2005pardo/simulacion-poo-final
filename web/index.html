@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>EcoSim — Simulación de Ecosistemas</title>
+  <meta name="description" content="Sistema de simulación de ecosistemas con POO. Modela interacciones entre especies, recursos y eventos ecológicos."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080d1a;--bg2:#0f1829;--bg3:#172135;--bg4:#1e2d45;
+      --border:rgba(255,255,255,.07);--glass:rgba(255,255,255,.03);--glass2:rgba(255,255,255,.06);
+      --green:#22c55e;--teal:#14b8a6;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;--cyan:#06b6d4;
+      --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+      --radius:14px;--shadow:0 12px 40px rgba(0,0,0,.6);
+    }
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .hidden{display:none!important}
+    .screen{display:none;min-height:100vh;animation:fadeIn .35s ease}
+    .screen.active{display:flex}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── LOGIN ── */
+    #screen-login{align-items:center;justify-content:center;
+      background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(34,197,94,.12) 0%,transparent 60%),
+                 radial-gradient(ellipse 60% 50% at 80% 100%,rgba(20,184,166,.1) 0%,transparent 60%),var(--bg)}
+    .login-box{background:rgba(15,24,41,.8);backdrop-filter:blur(24px);border:1px solid var(--border);border-radius:24px;padding:44px 40px;width:100%;max-width:420px;box-shadow:var(--shadow)}
+    .login-logo{text-align:center;margin-bottom:28px}
+    .login-logo .icon{font-size:52px;display:block;margin-bottom:12px;animation:float 3s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .login-logo h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--green),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .login-logo p{color:var(--text2);font-size:13px;margin-top:4px}
+    .field{margin-bottom:14px}.field label{display:block;font-size:12px;font-weight:600;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+    input,select{width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;font-family:'Inter',sans-serif}
+    input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.12)}
+    .hint{font-size:11px;color:var(--text3);margin-top:14px;text-align:center}.hint span{color:var(--green);font-weight:600}
+
+    /* ── BUTTONS ── */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 20px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .16s;white-space:nowrap;font-family:'Inter',sans-serif}
+    .btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+    .btn-full{width:100%}
+    .btn-primary{background:linear-gradient(135deg,var(--green),var(--teal));color:#fff}
+    .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(34,197,94,.3)}
+    .btn-ghost{background:var(--glass2);color:var(--text);border:1px solid var(--border)}
+    .btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.09)}
+    .btn-purple{background:linear-gradient(135deg,var(--purple),#7c3aed);color:#fff}
+    .btn-purple:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(168,85,247,.3)}
+    .btn-red{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+    .btn-red:hover:not(:disabled){background:rgba(239,68,68,.22)}
+    .btn-amber{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25)}
+    .btn-amber:hover:not(:disabled){background:rgba(245,158,11,.22)}
+    .btn-teal{background:rgba(20,184,166,.12);color:var(--teal);border:1px solid rgba(20,184,166,.25)}
+    .btn-teal:hover:not(:disabled){background:rgba(20,184,166,.22)}
+    .btn-blue{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.25)}
+    .btn-blue:hover:not(:disabled){background:rgba(59,130,246,.22)}
+    .btn-cyan{background:rgba(6,182,212,.12);color:var(--cyan);border:1px solid rgba(6,182,212,.25)}
+    .btn-cyan:hover:not(:disabled){background:rgba(6,182,212,.22)}
+    .btn-sm{padding:6px 13px;font-size:12px;border-radius:9px}
+    .btn-xs{padding:4px 9px;font-size:11px;border-radius:7px}
+    .badge{padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.02em}
+    .badge-green{background:rgba(34,197,94,.12);color:var(--green)}
+    .badge-blue{background:rgba(59,130,246,.12);color:var(--blue)}
+    .badge-amber{background:rgba(245,158,11,.12);color:var(--amber)}
+    .badge-teal{background:rgba(20,184,166,.12);color:var(--teal)}
+    .badge-red{background:rgba(239,68,68,.12);color:var(--red)}
+    .badge-purple{background:rgba(168,85,247,.12);color:var(--purple)}
+    .badge-cyan{background:rgba(6,182,212,.12);color:var(--cyan)}
+
+    /* ── ECO SELECT ── */
+    #screen-eco{align-items:center;justify-content:center;flex-direction:column;gap:36px;
+      background:radial-gradient(ellipse 70% 50% at 50% -5%,rgba(34,197,94,.1) 0%,transparent 55%),var(--bg)}
+    .eco-title{text-align:center}.eco-title h2{font-size:32px;font-weight:800;letter-spacing:-.5px}
+    .eco-title p{color:var(--text2);margin-top:8px;font-size:14px}
+    .eco-cards{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
+    .eco-card{background:rgba(15,24,41,.7);border:1px solid var(--border);border-radius:22px;padding:32px 26px;width:310px;cursor:pointer;transition:all .25s;text-align:center;position:relative;overflow:hidden}
+    .eco-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),var(--teal));opacity:0;transition:opacity .25s}
+    .eco-card:hover{border-color:rgba(34,197,94,.35);transform:translateY(-5px);box-shadow:0 20px 50px rgba(34,197,94,.15)}
+    .eco-card:hover::before{opacity:1}
+    .eco-card .eco-icon{font-size:58px;margin-bottom:14px;display:block}.eco-card h3{font-size:22px;font-weight:700;margin-bottom:8px}
+    .eco-card p{color:var(--text2);font-size:13px;line-height:1.65}
+    .eco-badges{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+    .eco-hint{font-size:11px;color:var(--text3);margin-top:10px;display:flex;align-items:center;gap:5px;justify-content:center}
+
+    /* ── DASHBOARD ── */
+    #screen-dashboard{flex-direction:column;
+      background:radial-gradient(ellipse 50% 35% at 0% 0%,rgba(34,197,94,.04) 0%,transparent 50%),
+                 radial-gradient(ellipse 40% 30% at 100% 100%,rgba(20,184,166,.04) 0%,transparent 50%),var(--bg)}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;
+      background:rgba(8,13,26,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+    .topbar-left{display:flex;align-items:center;gap:10px}
+    .topbar-logo{font-size:19px;font-weight:800;background:linear-gradient(135deg,var(--green),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .topbar-eco{font-size:12px;color:var(--text3);background:var(--glass2);border:1px solid var(--border);padding:3px 10px;border-radius:100px}
+    .topbar-right{display:flex;align-items:center;gap:9px}
+    .user-chip{display:flex;align-items:center;gap:8px;background:var(--glass2);border:1px solid var(--border);border-radius:100px;padding:4px 12px}
+    .user-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--teal));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+    .user-avatar.admin-av{background:linear-gradient(135deg,var(--purple),#7c3aed)}
+    .user-name{font-size:13px;font-weight:500}
+    .role-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;text-transform:uppercase}
+    .role-admin{background:rgba(168,85,247,.2);color:var(--purple)}.role-student{background:rgba(34,197,94,.2);color:var(--green)}
+    .dash-body{display:grid;grid-template-columns:260px 1fr;flex:1;min-height:0}
+    .sidebar{background:rgba(8,13,26,.6);border-right:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
+    .sidebar-section{color:var(--text3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:10px 10px 4px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;cursor:pointer;transition:all .14s;font-size:13px;font-weight:500;color:var(--text2);border:1px solid transparent}
+    .nav-item:hover{background:var(--glass2);color:var(--text)}.nav-item.active{background:rgba(34,197,94,.09);color:var(--green);border-color:rgba(34,197,94,.18)}
+    .nav-item .nav-icon{font-size:15px;width:18px;text-align:center}
+    .health-widget{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:8px 0}
+    .hw-label{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+    .hw-bar-wrap{height:7px;background:var(--bg3);border-radius:4px;margin:7px 0 4px}
+    .hw-bar{height:7px;border-radius:4px;transition:width .6s ease,background .4s}
+    .hw-val{font-size:20px;font-weight:800}.hw-sub{font-size:11px;color:var(--text3)}
+    .turn-widget{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:auto}
+    .turn-label{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+    .turn-num{font-size:34px;font-weight:800;color:var(--green);line-height:1.1}
+    .turn-total{font-size:11px;color:var(--text3);margin-top:2px}
+    .turn-bar-wrap{height:4px;background:var(--bg3);border-radius:2px;margin-top:8px}
+    .turn-bar{height:4px;background:linear-gradient(90deg,var(--green),var(--teal));border-radius:2px;transition:width .4s ease}
+    .main-content{padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:18px}
+    .panel-title{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+    /* ── STATS ── */
+    .stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+    .stat-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;overflow:hidden}
+    .stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+    .sc-g::after{background:var(--green)}.sc-t::after{background:var(--teal)}.sc-b::after{background:var(--blue)}.sc-r::after{background:var(--red)}.sc-a::after{background:var(--amber)}.sc-p::after{background:var(--purple)}
+    .sc-label{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+    .sc-val{font-size:24px;font-weight:800}.sc-sub{font-size:11px;color:var(--text3);margin-top:2px}
+    .sc-green{color:var(--green)}.sc-amber{color:var(--amber)}.sc-red{color:var(--red)}.sc-teal{color:var(--teal)}.sc-blue{color:var(--blue)}.sc-purple{color:var(--purple)}.sc-cyan{color:var(--cyan)}
+
+    /* ── POP CARDS ── */
+    .pop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+    .pop-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:border-color .2s,transform .15s}
+    .pop-card:hover{border-color:rgba(255,255,255,.12);transform:translateY(-1px)}
+    .pop-card.extinct{opacity:.5;border-color:rgba(239,68,68,.3)!important;background:rgba(239,68,68,.03)}
+    .pc-stripe{position:absolute;top:0;left:0;right:0;height:3px}
+    .pc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+    .pc-name{font-size:14px;font-weight:700}.pc-count{font-size:28px;font-weight:800;line-height:1}
+    .pc-meta{font-size:10px;color:var(--text3);margin-top:2px}
+    .pc-bar-wrap{height:4px;background:var(--bg3);border-radius:2px;margin-top:10px}
+    .pc-bar{height:4px;border-radius:2px;transition:width .5s ease}
+    .trend{font-size:11px;font-weight:700}.trend-up{color:var(--green)}.trend-down{color:var(--red)}.trend-same{color:var(--text3)}
+    .pc-sparkline{display:flex;align-items:flex-end;gap:2px;height:22px;margin-top:8px}
+    .spark-bar{flex:1;border-radius:1px;min-height:2px;transition:height .3s}
+    .pc-actions{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+    .extinct-tag{background:rgba(239,68,68,.15);color:var(--red);font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;display:inline-block;margin-top:6px}
+
+    /* ── INTER CARDS ── */
+    .inter-list{display:flex;flex-direction:column;gap:8px}
+    .inter-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:12px 15px;display:flex;align-items:center;gap:12px}
+    .inter-arrow{color:var(--amber);font-size:16px}.inter-info{flex:1}
+    .ii-title{font-size:13px;font-weight:600}.ii-meta{font-size:11px;color:var(--text3);margin-top:1px}
+    .inter-stat{text-align:right;min-width:50px}.is-num{font-size:16px;font-weight:700;color:var(--amber)}.is-label{font-size:10px;color:var(--text3)}
+
+    /* ── CONSOLE ── */
+    .console{background:#060b14;border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-family:'Courier New',monospace;font-size:12px;height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+    .log-line{display:flex;gap:9px;align-items:flex-start;line-height:1.5}
+    .log-ts{color:var(--text3);flex-shrink:0;min-width:58px}
+    .log-info{color:#86efac}.log-warn{color:var(--amber)}.log-error{color:var(--red)}.log-system{color:var(--cyan)}.log-action{color:#c4b5fd}.log-extinct{color:var(--red);font-weight:700}
+
+    /* ── ALERTS ── */
+    .alerts-list{display:flex;flex-direction:column;gap:6px}
+    .alert-item{display:flex;align-items:center;gap:10px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18);border-radius:10px;padding:10px 13px;animation:slideIn .3s ease}
+    .alert-item.warn{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.18)}
+    .alert-item.info{background:rgba(59,130,246,.07);border-color:rgba(59,130,246,.18)}
+    @keyframes slideIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+    .alert-icon{font-size:15px}.alert-msg{font-size:13px;font-weight:500;color:var(--red)}
+    .alert-item.warn .alert-msg{color:var(--amber)}.alert-item.info .alert-msg{color:var(--blue)}
+    .no-alerts{color:var(--text3);font-size:13px;display:flex;align-items:center;gap:8px;padding:10px 0}
+
+    /* ── HIST TABLE ── */
+    .hist-table{width:100%;border-collapse:collapse}
+    .hist-table th{text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:6px 11px;border-bottom:1px solid var(--border)}
+    .hist-table td{padding:8px 11px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03)}
+    .hist-table tr:last-child td{border-bottom:none}.hist-table tr:hover td{background:var(--glass)}
+
+    /* ── MODALS ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(5px);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+    .modal-overlay.open{display:flex;animation:fadeIn .2s ease}
+    .modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:26px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow)}
+    .modal h3{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    /* ── TABS ── */
+    .tabs{display:flex;gap:3px;background:var(--bg3);border-radius:10px;padding:4px;margin-bottom:16px;flex-wrap:wrap}
+    .tab{flex:1;min-width:max-content;padding:7px 11px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;text-align:center;color:var(--text3);transition:all .14s}
+    .tab.active{background:var(--glass2);color:var(--text)}.tab:hover:not(.active){color:var(--text2)}
+
+    /* ── ADMIN ── */
+    .admin-card{background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.18);border-radius:var(--radius);padding:16px}
+    .admin-card h4{color:var(--purple);font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .user-table{width:100%;border-collapse:collapse}
+    .user-table th{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:6px 10px;border-bottom:1px solid var(--border);text-align:left}
+    .user-table td{padding:8px 10px;font-size:12px}.user-table tr:hover td{background:var(--glass)}
+
+    /* ── REWARD ── */
+    .reward-bar{background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(20,184,166,.08));border:1px solid rgba(34,197,94,.22);border-radius:var(--radius);padding:14px 17px;display:flex;align-items:center;gap:13px}
+    .reward-icon{font-size:32px}.ri-label{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase}.ri-text{font-size:13px;font-weight:600;color:var(--green);margin-top:2px}
+
+    /* ── SIM CONTROLS ── */
+    .sim-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+    .sim-status{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--text3)}
+    .status-dot.active{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+    .status-dot.stopped{background:var(--red)}.status-dot.ended{background:var(--amber)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .auto-run-wrap{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:4px 10px}
+    .auto-run-wrap label{font-size:11px;color:var(--text3);white-space:nowrap}
+    .auto-run-wrap input{width:46px;padding:3px 6px;font-size:12px;border-radius:6px;text-align:center}
+
+    /* ── EMPTY ── */
+    .empty{text-align:center;padding:32px;color:var(--text3)}.empty .e-icon{font-size:36px;margin-bottom:9px}.empty p{font-size:13px;line-height:1.6}
+
+    /* ── TOAST ── */
+    #toast-container{position:fixed;bottom:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:340px}
+    .toast{background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:10px 15px;font-size:13px;font-weight:500;box-shadow:var(--shadow);animation:slideUp .26s ease;pointer-events:all}
+    @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .toast.toast-success{border-color:rgba(34,197,94,.4);color:var(--green)}
+    .toast.toast-warn{border-color:rgba(245,158,11,.4);color:var(--amber)}
+    .toast.toast-error{border-color:rgba(239,68,68,.4);color:var(--red)}
+    .toast.toast-info{border-color:rgba(59,130,246,.4);color:var(--blue)}
+
+    /* ── FORM MSG ── */
+    .form-msg{padding:8px 12px;border-radius:9px;font-size:12px;margin-top:7px;display:none}
+    .form-msg.error{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);color:var(--red)}
+    .form-msg.success{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25);color:var(--green)}
+    .form-msg.warn{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);color:var(--amber)}
+    .divider{display:flex;align-items:center;gap:10px;margin:14px 0}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+    .divider span{font-size:11px;color:var(--text3)}
+
+    /* ── REPORT ── */
+    #report-output{background:#060b14;border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:'Courier New',monospace;font-size:12px;color:#86efac;max-height:380px;overflow-y:auto;white-space:pre-wrap;display:none}
+
+    @media(max-width:768px){.dash-body{grid-template-columns:1fr}.sidebar{display:none}.form-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     LOGIN
+════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="icon">🌿</span>
+      <h1>EcoSim</h1>
+      <p>Sistema de Simulación de Ecosistemas</p>
+    </div>
+    <div id="login-error" class="form-msg error">Credenciales incorrectas o usuario inactivo.</div>
+    <div class="field"><label for="inp-user">Usuario</label>
+      <input id="inp-user" type="text" placeholder="ej. juanp"/></div>
+    <div class="field"><label for="inp-pass">Contraseña</label>
+      <input id="inp-pass" type="password" placeholder="••••••"/></div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Ingresar →</button>
+    <div class="divider"><span>¿No tienes cuenta?</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="abrirRegistro('estudiante')">🎓 Estudiante</button>
+      <button class="btn btn-ghost btn-sm" style="border-color:rgba(168,85,247,.35);color:var(--purple)" onclick="abrirRegistro('admin')">👑 Admin</button>
+    </div>
+    <p class="hint">Demo — <span>juanp</span>/1234 &nbsp;|&nbsp; <span>admin</span>/admin123</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     ECO SELECT
+════════════════════════════════════ -->
+<div id="screen-eco" class="screen">
+  <div class="eco-title"><h2>¿Qué ecosistema deseas simular?</h2><p>Selecciona el escenario y personalízalo a tu gusto</p></div>
+  <div class="eco-cards">
+    <div class="eco-card" onclick="selectEco('terrestre')">
+      <span class="eco-icon">🦁</span><h3>Terrestre</h3>
+      <p>Cadena trófica de tierra: grandes depredadores, herbívoros y plantas.</p>
+      <div class="eco-badges">
+        <span class="badge badge-red">León</span><span class="badge badge-red">Lobo</span>
+        <span class="badge badge-green">Ciervo</span><span class="badge badge-green">Conejo</span>
+        <span class="badge badge-teal">Hierba</span>
+      </div>
+      <div class="eco-hint">✏️ Puedes agregar o eliminar especies al entrar</div>
+    </div>
+    <div class="eco-card" onclick="selectEco('marino')">
+      <span class="eco-icon">🌊</span><h3>Marino</h3>
+      <p>Cadena trófica oceánica: depredadores marinos, peces, cefalópodos y plantas acuáticas.</p>
+      <div class="eco-badges">
+        <span class="badge badge-blue">Tiburón</span><span class="badge badge-blue">Orca</span>
+        <span class="badge badge-green">Pez</span><span class="badge badge-green">Calamar</span>
+        <span class="badge badge-teal">Alga</span><span class="badge badge-teal">Coral</span>
+      </div>
+      <div class="eco-hint">✏️ Puedes agregar o eliminar especies al entrar</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     DASHBOARD
+════════════════════════════════════ -->
+<div id="screen-dashboard" class="screen" style="flex-direction:column">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-logo">🌿 EcoSim</span>
+      <span class="topbar-eco" id="eco-label">—</span>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span class="user-name" id="user-name-display">—</span>
+        <span class="role-badge" id="role-badge">—</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+    <aside class="sidebar">
+      <span class="sidebar-section">Simulación</span>
+      <div class="nav-item active" id="nav-inicio" onclick="showPanel('inicio')"><span class="nav-icon">🎮</span> Panel Principal</div>
+      <div class="nav-item" id="nav-poblaciones" onclick="showPanel('poblaciones')"><span class="nav-icon">🐾</span> Poblaciones</div>
+      <div class="nav-item" id="nav-interacciones" onclick="showPanel('interacciones')"><span class="nav-icon">⚡</span> Interacciones</div>
+      <div class="nav-item" id="nav-entorno" onclick="showPanel('entorno')"><span class="nav-icon">🌍</span> Entorno</div>
+      <div class="nav-item" id="nav-historial" onclick="showPanel('historial')"><span class="nav-icon">📜</span> Historial</div>
+      <span class="sidebar-section">Gestión</span>
+      <div class="nav-item" id="nav-agregar" onclick="showPanel('agregar')"><span class="nav-icon">➕</span> Agregar Especie</div>
+      <div class="nav-item" id="nav-buscar" onclick="showPanel('buscar')"><span class="nav-icon">🔍</span> Buscar Especie</div>
+      <div class="nav-item" id="nav-reporte" onclick="showPanel('reporte')"><span class="nav-icon">📋</span> Reporte</div>
+      <div class="nav-item hidden admin-only" id="nav-admin" onclick="showPanel('admin')"><span class="nav-icon">👑</span> Panel Admin</div>
+
+      <!-- Salud del ecosistema -->
+      <div class="health-widget">
+        <div class="hw-label">Salud del Ecosistema</div>
+        <div class="hw-val sc-green" id="hw-val">—</div>
+        <div class="hw-bar-wrap"><div class="hw-bar" id="hw-bar" style="width:0%"></div></div>
+        <div class="hw-sub" id="hw-sub">Sin datos</div>
+      </div>
+
+      <div class="turn-widget">
+        <div class="turn-label">Turno</div>
+        <div class="turn-num" id="tw-turn">0</div>
+        <div class="turn-total" id="tw-total">de 10</div>
+        <div class="turn-bar-wrap"><div class="turn-bar" id="turn-bar" style="width:0%"></div></div>
+      </div>
+    </aside>
+
+    <main class="main-content" id="main-content">
+
+      <!-- PANEL INICIO -->
+      <div id="panel-inicio">
+        <div class="panel-title">🎮 Panel Principal</div>
+        <div class="sim-controls">
+          <div class="sim-status"><div class="status-dot" id="status-dot"></div><span id="status-text">Sin iniciar</span></div>
+          <div style="flex:1"></div>
+          <button class="btn btn-ghost btn-sm" id="btn-iniciar" onclick="simIniciar()">▶ Iniciar</button>
+          <button class="btn btn-teal btn-sm" id="btn-turno" onclick="simEjecutarTurno()" disabled>⏭ Turno</button>
+          <div class="auto-run-wrap">
+            <label>Auto:</label>
+            <input id="auto-n" type="number" min="1" max="10" value="3" title="Ejecutar N turnos a la vez"/>
+            <button class="btn btn-cyan btn-sm" id="btn-auto" onclick="simAutoEjecutar()" disabled>▶▶</button>
+          </div>
+          <button class="btn btn-amber btn-sm" id="btn-reiniciar" onclick="simReiniciar()" disabled>🔄</button>
+          <button class="btn btn-red btn-sm" id="btn-detener" onclick="simDetener()" disabled>⏹</button>
+        </div>
+        <div class="stat-row" style="margin-top:2px">
+          <div class="stat-card sc-g"><div class="sc-label">Turno</div><div class="sc-val sc-green" id="s-turno">0</div><div class="sc-sub">de <span id="s-total">10</span></div></div>
+          <div class="stat-card sc-t"><div class="sc-label">Alimento</div><div class="sc-val sc-teal" id="s-alimento">—</div><div class="sc-sub">disponible</div></div>
+          <div class="stat-card sc-b"><div class="sc-label">Especies</div><div class="sc-val sc-blue" id="s-especies">0</div><div class="sc-sub">activas</div></div>
+          <div class="stat-card sc-r"><div class="sc-label">Alertas</div><div class="sc-val sc-red" id="s-alertas">0</div><div class="sc-sub">activas</div></div>
+          <div class="stat-card sc-a"><div class="sc-label">Extinciones</div><div class="sc-val sc-amber" id="s-extinciones">0</div><div class="sc-sub">en esta sim.</div></div>
+        </div>
+        <div class="panel-title" style="margin-top:4px">🐾 Poblaciones
+          <button class="btn btn-teal btn-sm" onclick="openModal('modal-add-pop')" style="margin-left:auto">+ Nueva</button>
+        </div>
+        <div class="pop-grid" id="pop-grid-inicio"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+          <span class="panel-title" style="margin-bottom:0">💻 Consola</span>
+          <button class="btn btn-ghost btn-sm" onclick="limpiarConsola()">Limpiar</button>
+        </div>
+        <div class="console" id="console-log"></div>
+      </div>
+
+      <!-- PANEL POBLACIONES -->
+      <div id="panel-poblaciones" style="display:none">
+        <div class="panel-title">🐾 Gestión de Poblaciones
+          <button class="btn btn-teal btn-sm" onclick="openModal('modal-add-pop')" style="margin-left:auto">+ Nueva</button>
+        </div>
+        <div class="pop-grid" id="pop-grid-full"></div>
+      </div>
+
+      <!-- PANEL INTERACCIONES -->
+      <div id="panel-interacciones" style="display:none">
+        <div class="panel-title">⚡ Interacciones Ecológicas
+          <button class="btn btn-amber btn-sm" onclick="openModal('modal-add-inter')" style="margin-left:auto">+ Nueva</button>
+        </div>
+        <div class="inter-list" id="inter-list"></div>
+      </div>
+
+      <!-- PANEL ENTORNO -->
+      <div id="panel-entorno" style="display:none">
+        <div class="panel-title">🌍 Estado del Entorno</div>
+        <div class="stat-row" style="margin-bottom:18px">
+          <div class="stat-card sc-g"><div class="sc-label">Alimento</div><div class="sc-val sc-green" id="e-alimento">—</div><div class="sc-sub">unidades</div></div>
+          <div class="stat-card sc-a"><div class="sc-label">Consumo/ind</div><div class="sc-val sc-amber" id="e-tasa">—</div><div class="sc-sub">por turno</div></div>
+          <div class="stat-card sc-t"><div class="sc-label">Regeneración</div><div class="sc-val sc-teal" id="e-regen">—</div><div class="sc-sub">por turno</div></div>
+        </div>
+        <div class="panel-title">⚠️ Alertas Ecológicas</div>
+        <div class="alerts-list" id="alerts-list"></div>
+      </div>
+
+      <!-- PANEL HISTORIAL -->
+      <div id="panel-historial" style="display:none">
+        <div class="panel-title">📜 Historial de Turnos</div>
+        <div class="empty" id="hist-empty"><div class="e-icon">📭</div><p>Sin turnos registrados aún.</p></div>
+        <div style="overflow-x:auto">
+          <table class="hist-table" id="hist-table" style="display:none"><thead><tr id="hist-thead"></tr></thead><tbody id="hist-body"></tbody></table>
+        </div>
+        <div class="reward-bar" id="reward-bar" style="margin-top:16px;display:none">
+          <div class="reward-icon" id="reward-icon">🏅</div>
+          <div><div class="ri-label">Recompensa obtenida</div><div class="ri-text" id="reward-text">—</div></div>
+        </div>
+      </div>
+
+      <!-- PANEL AGREGAR -->
+      <div id="panel-agregar" style="display:none">
+        <div class="panel-title">➕ Agregar Nueva Especie</div>
+        <div style="max-width:480px;display:flex;flex-direction:column;gap:11px">
+          <div class="form-row">
+            <div class="field" style="margin:0"><label>Nombre</label><input id="ag-nombre" type="text" placeholder="ej. Tigre"/></div>
+            <div class="field" style="margin:0"><label>Tipo</label>
+              <select id="ag-tipo"><option>Herbivoro</option><option>Carnivoro</option><option>Planta</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="field" style="margin:0"><label>Tasa Reproducción</label><input id="ag-rep" type="number" min="0" max="1" step="0.01" placeholder="0.20"/></div>
+            <div class="field" style="margin:0"><label>Tasa Mortalidad</label><input id="ag-mort" type="number" min="0" max="1" step="0.01" placeholder="0.05"/></div>
+          </div>
+          <div class="form-row">
+            <div class="field" style="margin:0"><label>Cantidad inicial</label><input id="ag-cant" type="number" min="1" placeholder="20"/></div>
+            <div class="field" style="margin:0"><label>Límite K</label><input id="ag-limite" type="number" min="1" placeholder="100"/></div>
+          </div>
+          <div id="ag-msg" class="form-msg warn"></div>
+          <button class="btn btn-primary" style="width:auto" onclick="agregarEspecie()">Registrar especie →</button>
+        </div>
+      </div>
+
+      <!-- PANEL BUSCAR -->
+      <div id="panel-buscar" style="display:none">
+        <div class="panel-title">🔍 Buscar Especie</div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;max-width:400px">
+          <input id="buscar-inp" type="text" placeholder="Nombre de la especie..." style="flex:1"/>
+          <button class="btn btn-primary" onclick="buscarEspecie()">Buscar</button>
+        </div>
+        <div id="buscar-result"></div>
+      </div>
+
+      <!-- PANEL REPORTE -->
+      <div id="panel-reporte" style="display:none">
+        <div class="panel-title">📋 Reporte de Simulación</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="generarReporte()">📄 Generar Reporte</button>
+          <button class="btn btn-ghost btn-sm" onclick="copiarReporte()">📋 Copiar</button>
+        </div>
+        <div id="report-output"></div>
+        <div id="report-empty" class="empty"><div class="e-icon">📋</div><p>Genera el reporte después de ejecutar algunos turnos.</p></div>
+      </div>
+
+      <!-- PANEL ADMIN -->
+      <div id="panel-admin" style="display:none">
+        <div class="panel-title">👑 Panel Administrador
+          <span class="badge badge-purple" id="admin-user-count" style="margin-left:auto">0 usuarios</span></div>
+        <div class="tabs">
+          <div class="tab active" onclick="adminTab(this,'tab-todos')">Todos</div>
+          <div class="tab" onclick="adminTab(this,'tab-paralelo')">Por Paralelo</div>
+          <div class="tab" onclick="adminTab(this,'tab-cedula')">Por Cédula</div>
+          <div class="tab" onclick="adminTab(this,'tab-registrar')">➕ Registrar</div>
+        </div>
+        <div id="tab-todos"><div class="admin-card" id="admin-todos-result"></div></div>
+        <div id="tab-paralelo" style="display:none">
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input id="admin-paralelo" type="text" placeholder="ej. A" style="width:80px"/>
+            <button class="btn btn-ghost btn-sm" onclick="adminBuscarParalelo()">Buscar</button>
+          </div>
+          <div class="admin-card" id="admin-paralelo-result" style="display:none"></div>
+        </div>
+        <div id="tab-cedula" style="display:none">
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input id="admin-cedula" type="text" placeholder="Cédula" style="max-width:220px"/>
+            <button class="btn btn-ghost btn-sm" onclick="adminBuscarCedula()">Buscar</button>
+          </div>
+          <div class="admin-card" id="admin-cedula-result" style="display:none"></div>
+        </div>
+        <div id="tab-registrar" style="display:none">
+          <div class="admin-card">
+            <h4>✏️ Registrar Nuevo Usuario</h4>
+            <div style="display:flex;flex-direction:column;gap:11px;max-width:480px">
+              <div class="form-row">
+                <div class="field" style="margin:0"><label>Nombre</label><input id="ar-nombre" type="text" placeholder="Juan López"/></div>
+                <div class="field" style="margin:0"><label>Cédula</label><input id="ar-cedula" type="text" placeholder="1234567890"/></div>
+              </div>
+              <div class="field" style="margin:0"><label>Correo</label><input id="ar-correo" type="email" placeholder="correo@ejemplo.com"/></div>
+              <div class="form-row">
+                <div class="field" style="margin:0"><label>Usuario</label><input id="ar-usr" type="text" placeholder="juanl"/></div>
+                <div class="field" style="margin:0"><label>Contraseña</label><input id="ar-pass" type="password" placeholder="mín. 4 chars"/></div>
+              </div>
+              <div class="form-row">
+                <div class="field" style="margin:0"><label>Rol</label>
+                  <select id="ar-rol" onchange="toggleParaleloAdmin()">
+                    <option value="estudiante">Estudiante</option><option value="admin">Admin</option>
+                  </select></div>
+                <div class="field" style="margin:0" id="ar-par-wrap"><label>Paralelo</label><input id="ar-paralelo" type="text" placeholder="A"/></div>
+              </div>
+              <div id="ar-msg" class="form-msg"></div>
+              <button class="btn btn-purple" style="width:auto" onclick="adminRegistrarUsuario()">Registrar →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════════ MODAL: REGISTRO LOGIN ════════ -->
+<div class="modal-overlay" id="modal-registro" onclick="closeModalOutside(event,'modal-registro')">
+  <div class="modal">
+    <h3 id="reg-titulo">✏️ Crear cuenta</h3>
+    <div id="reg-banner" style="padding:7px 12px;border-radius:9px;font-size:12px;font-weight:600;margin-bottom:13px;text-align:center"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="form-row">
+        <div class="field" style="margin:0"><label>Nombre completo</label><input id="reg-nombre" type="text" placeholder="María García"/></div>
+        <div class="field" style="margin:0"><label>Cédula</label><input id="reg-cedula" type="text" placeholder="1234567890"/></div>
+      </div>
+      <div class="field" style="margin:0"><label>Correo</label><input id="reg-correo" type="email" placeholder="correo@ejemplo.com"/></div>
+      <div class="form-row">
+        <div class="field" style="margin:0"><label>Usuario</label><input id="reg-usr" type="text" placeholder="mgarcia"/></div>
+        <div class="field" style="margin:0"><label>Contraseña</label><input id="reg-pass" type="password" placeholder="mín. 4 chars"/></div>
+      </div>
+      <div class="field" style="margin:0" id="reg-par-wrap"><label>Paralelo</label><input id="reg-paralelo" type="text" placeholder="A" style="max-width:100px"/></div>
+      <div id="reg-msg" class="form-msg"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-registro')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" id="reg-btn" onclick="autoRegistro()">Crear cuenta →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MODAL: AGREGAR POBLACIÓN ════════ -->
+<div class="modal-overlay" id="modal-add-pop" onclick="closeModalOutside(event,'modal-add-pop')">
+  <div class="modal">
+    <h3>🐾 Agregar Población</h3>
+    <div class="field"><label>Especie</label><select id="mp-especie"></select></div>
+    <div class="form-row">
+      <div class="field" style="margin:0"><label>Cantidad inicial</label><input id="mp-cant" type="number" min="1" placeholder="20"/></div>
+      <div class="field" style="margin:0"><label>Límite espacio K</label><input id="mp-limite" type="number" min="1" placeholder="100"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-add-pop')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="modalAgregarPob()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MODAL: AGREGAR INTERACCIÓN ════════ -->
+<div class="modal-overlay" id="modal-add-inter" onclick="closeModalOutside(event,'modal-add-inter')">
+  <div class="modal">
+    <h3>⚡ Agregar Interacción</h3>
+    <div class="form-row">
+      <div class="field" style="margin:0"><label>Depredador</label><input id="mi-dep" type="text" placeholder="ej. Leon"/></div>
+      <div class="field" style="margin:0"><label>Presa</label><input id="mi-presa" type="text" placeholder="ej. Ciervo"/></div>
+    </div>
+    <div class="form-row" style="margin-top:10px">
+      <div class="field" style="margin:0"><label>Factor caza (0–1)</label><input id="mi-fc" type="number" min="0" max="1" step="0.01" placeholder="0.20"/></div>
+      <div class="field" style="margin:0"><label>Efic. conversión (0–1)</label><input id="mi-ef" type="number" min="0" max="1" step="0.01" placeholder="0.40"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-add-inter')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="modalAgregarInter()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MODAL: CONFIRMAR ELIMINAR ════════ -->
+<div class="modal-overlay" id="modal-confirm-del" onclick="closeModalOutside(event,'modal-confirm-del')">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <h3 style="justify-content:center">🗑️ Eliminar Población</h3>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:6px">¿Estás seguro de eliminar la población de</p>
+    <p style="font-size:18px;font-weight:700;color:var(--red);margin-bottom:16px" id="del-nombre-display">—</p>
+    <p style="font-size:12px;color:var(--text3)">Esta acción no se puede deshacer.</p>
+    <div class="modal-actions" style="justify-content:center;margin-top:16px">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-confirm-del')">Cancelar</button>
+      <button class="btn btn-red btn-sm" onclick="confirmarEliminar()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- ════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════ -->
+<script>
+"use strict";
+
+// ── CLASES ──────────────────────────────────────
+class Especie {
+  constructor(n,t,r,m){this.nombre=n;this.tipo=t;this.tasaReproduccion=r;this.tasaMortalidad=m}
+  balanceVital(){return this.tasaReproduccion-this.tasaMortalidad}
+}
+class Poblacion {
+  constructor(cant,lim,esp){this.cantidad=cant;this.limiteEspacio=lim;this.especie=esp;this.cantidadAnterior=cant;this.historial=[cant]}
+  actualizarPoblacion(logs){
+    const r=this.especie.tasaReproduccion,m=this.especie.tasaMortalidad;
+    let nac=Math.floor(this.cantidad*r);const mue=Math.floor(this.cantidad*m);
+    this.cantidadAnterior=this.cantidad;
+    if(this.cantidad>this.limiteEspacio)nac=Math.floor(nac/2);
+    this.cantidad=Math.max(0,this.cantidad+nac-mue);
+    this.historial.push(this.cantidad);
+    if(this.historial.length>8)this.historial.shift();
+    logs.push({t:'info',m:`${this.especie.nombre}: ${this.cantidadAnterior}→${this.cantidad} (N:+${nac} M:-${mue})`});
+  }
+}
+class Interaccion {
+  constructor(dep,presa,fc,ef){this.nombreDepredador=dep;this.nombrePresa=presa;this.factorCaza=fc;this.eficienciaConversion=ef}
+  simularCaza(dep,presa,logs){
+    let caz=Math.floor(dep.cantidad*this.factorCaza);
+    if(caz>presa.cantidad)caz=presa.cantidad;
+    presa.cantidad-=caz;
+    logs.push({t:'action',m:`Caza: ${this.nombreDepredador} cazó ${caz} ${this.nombrePresa}`});
+    const nv=Math.floor(caz*this.eficienciaConversion);
+    dep.cantidad+=nv;
+    if(nv>0)logs.push({t:'action',m:`Energía: +${nv} ${this.nombreDepredador}`});
+  }
+}
+class Entorno {
+  constructor(alim,tasa,regen){this.alimentoDisponible=alim;this.tasaConsumo=tasa;this.regeneracionVegetal=regen;this.alertas=[]}
+  calcularConsumo(pobs,logs){
+    const total=pobs.reduce((s,p)=>s+p.cantidad,0);
+    const cons=total*this.tasaConsumo;
+    this.alimentoDisponible=Math.max(0,this.alimentoDisponible+this.regeneracionVegetal-cons);
+    logs.push({t:'system',m:`Entorno: consumo=${cons} regen=+${this.regeneracionVegetal} → alimento=${this.alimentoDisponible}`});
+    this._alertas(pobs,logs);
+  }
+  _alertas(pobs,logs){
+    const cr='¡Colapso por escasez de recursos!';
+    if(this.alimentoDisponible===0){if(!this.alertas.includes(cr)){this.alertas.push(cr);logs.push({t:'error',m:'ALERTA: '+cr});}}
+    else this.alertas=this.alertas.filter(a=>a!==cr);
+    for(const p of pobs){
+      const msg=`¡Sobrepoblación en ${p.especie.nombre}!`;
+      if(p.cantidad>p.limiteEspacio){if(!this.alertas.includes(msg)){this.alertas.push(msg);logs.push({t:'warn',m:'ALERTA: '+msg});}}
+      else this.alertas=this.alertas.filter(a=>a!==msg);
+    }
+  }
+}
+class Simulacion {
+  constructor(total,entorno){this.tiempoTotal=total;this.turnoActual=0;this.activa=false;this.finalizada=false;this.especies=[];this.poblaciones=[];this.interacciones=[];this.entorno=entorno;this.historial=[];this.extinciones=[]}
+  reiniciar(){this.turnoActual=0;this.activa=true;this.finalizada=false;this.historial=[];this.extinciones=[];}
+  buscarPob(nombre){return this.poblaciones.find(p=>p.especie.nombre.toLowerCase()===nombre.toLowerCase())||null}
+}
+class Usuario {
+  constructor(n,c,co,u,p,e){this.nombreCompleto=n;this.cedula=c;this.correo=co;this.nombreUsuario=u;this.contrasena=p;this.estado=e;this.rol='usuario';this.simulacionesCompletadas=0}
+  estaActivo(){return this.estado==='Activo'}login(u,p){return this.nombreUsuario===u&&this.contrasena===p}
+}
+class Estudiante extends Usuario {
+  constructor(n,c,co,u,p,e,par){super(n,c,co,u,p,e);this.paralelo=par;this.rol='estudiante'}
+  obtenerRecompensa(t){
+    if(t>=10)return{icon:'🏆',text:'Recompensa GOLD: ¡Ecosistema dominado!'};
+    if(t>=5) return{icon:'🥈',text:'Recompensa SILVER: Buen progreso.'};
+    if(t>=1) return{icon:'🥉',text:'Recompensa BRONZE: Primeros pasos.'};
+    return{icon:'💡',text:'Sin recompensa.'};
+  }
+}
+class Administrador extends Usuario {
+  constructor(n,c,co,u,p,e){super(n,c,co,u,p,e);this.rol='admin'}
+}
+
+// ── ECOSISTEMAS ──────────────────────────────────
+function generarTerrestre(){
+  const e=new Entorno(1200,2,80),s=new Simulacion(10,e);
+  const leon=new Especie('Leon','Carnivoro',0.10,0.05),lobo=new Especie('Lobo','Carnivoro',0.12,0.06);
+  const ciervo=new Especie('Ciervo','Herbivoro',0.30,0.10),conejo=new Especie('Conejo','Herbivoro',0.45,0.15);
+  const hierba=new Especie('Hierba','Planta',0.60,0.05);
+  s.especies.push(leon,lobo,ciervo,conejo,hierba);
+  s.poblaciones.push(new Poblacion(8,40,leon),new Poblacion(12,60,lobo),new Poblacion(60,250,ciervo),new Poblacion(100,400,conejo),new Poblacion(500,2000,hierba));
+  s.interacciones.push(new Interaccion('Leon','Ciervo',0.20,0.50),new Interaccion('Lobo','Conejo',0.25,0.45),new Interaccion('Ciervo','Hierba',0.15,0.30),new Interaccion('Conejo','Hierba',0.20,0.25));
+  return s;
+}
+function generarMarino(){
+  const e=new Entorno(1500,3,100),s=new Simulacion(10,e);
+  const tb=new Especie('Tiburon','Carnivoro',0.08,0.04),orca=new Especie('Orca','Carnivoro',0.06,0.03);
+  const pez=new Especie('Pez','Herbivoro',0.35,0.12),cal=new Especie('Calamar','Herbivoro',0.40,0.14);
+  const alga=new Especie('Alga','Planta',0.55,0.05),coral=new Especie('Coral','Planta',0.30,0.04);
+  s.especies.push(tb,orca,pez,cal,alga,coral);
+  s.poblaciones.push(new Poblacion(6,30,tb),new Poblacion(4,20,orca),new Poblacion(120,500,pez),new Poblacion(80,300,cal),new Poblacion(600,3000,alga),new Poblacion(300,1500,coral));
+  s.interacciones.push(new Interaccion('Tiburon','Pez',0.18,0.45),new Interaccion('Orca','Calamar',0.22,0.40),new Interaccion('Pez','Alga',0.20,0.30),new Interaccion('Calamar','Coral',0.15,0.25));
+  return s;
+}
+
+// ── ESTADO GLOBAL ────────────────────────────────
+const usuarios=[
+  new Estudiante('Juan Perez','1234567890','juan@test.com','juanp','1234','Activo','A'),
+  new Estudiante('Ana Torres','0987654321','ana@test.com','ana','4567','Activo','B'),
+  new Administrador('Profe Maria','1111111111','maria@test.com','admin','admin123','Activo'),
+];
+let currentUser=null,sim=null,ecoType=null,_pendingDel=null,_regRol='estudiante';
+
+// ── LOGIN ────────────────────────────────────────
+document.getElementById('inp-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+document.getElementById('inp-user').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('inp-pass').focus()});
+document.getElementById('buscar-inp').addEventListener('keydown',e=>{if(e.key==='Enter')buscarEspecie()});
+
+function doLogin(){
+  const u=document.getElementById('inp-user').value.trim(),p=document.getElementById('inp-pass').value.trim();
+  const found=usuarios.find(x=>x.login(u,p)&&x.estaActivo());
+  document.getElementById('login-error').style.display=found?'none':'block';
+  if(!found)return;
+  currentUser=found;showScreen('screen-eco');
+}
+
+// ── ECO SELECT ───────────────────────────────────
+function selectEco(type){
+  ecoType=type;
+  sim=type==='terrestre'?generarTerrestre():generarMarino();
+  initDashboard();showScreen('screen-dashboard');
+}
+
+// ── DASHBOARD ────────────────────────────────────
+function initDashboard(){
+  const ini=currentUser.nombreCompleto.split(' ').map(x=>x[0]).join('').slice(0,2);
+  const av=document.getElementById('user-avatar');
+  av.textContent=ini;av.className='user-avatar'+(currentUser.rol==='admin'?' admin-av':'');
+  document.getElementById('user-name-display').textContent=currentUser.nombreCompleto;
+  const rb=document.getElementById('role-badge');
+  rb.textContent=currentUser.rol==='admin'?'Admin':'Estudiante';
+  rb.className='role-badge '+(currentUser.rol==='admin'?'role-admin':'role-student');
+  document.getElementById('eco-label').textContent=ecoType==='terrestre'?'🦁 Terrestre':'🌊 Marino';
+  if(currentUser.rol==='admin'){document.querySelectorAll('.admin-only').forEach(el=>el.classList.remove('hidden'));showPanel('admin');}
+  else showPanel('inicio');
+  setStatus('','Sin iniciar');updateAll();
+  log('system',`Bienvenido/a ${currentUser.nombreCompleto} [${currentUser.rol.toUpperCase()}]`);
+  log('info',`Ecosistema ${ecoType}: ${sim.especies.length} especies, ${sim.interacciones.length} interacciones`);
+  log('system','Puedes agregar/eliminar poblaciones antes o durante la simulación.');
+}
+
+// ── SIM CONTROL ──────────────────────────────────
+function simIniciar(){
+  if(sim.activa){showToast('La simulación ya está activa.','warn');return;}
+  sim.reiniciar();updateAll();updateBtns();setStatus('active','Simulación activa');
+  log('system','▶ Simulación iniciada.');showToast('Simulación iniciada.','success');
+}
+function simEjecutarTurno(){
+  if(!sim.activa||sim.finalizada){showToast('Inicia la simulación primero.','warn');return;}
+  if(sim.turnoActual>=sim.tiempoTotal){showToast('Ya finalizaron todos los turnos.','warn');return;}
+  _ejecutarUnTurno();
+  if(sim.turnoActual>=sim.tiempoTotal)_finalizarSim();
+}
+function simAutoEjecutar(){
+  if(!sim.activa){showToast('Inicia la simulación primero.','warn');return;}
+  const n=parseInt(document.getElementById('auto-n').value)||3;
+  let ejecutados=0;
+  for(let i=0;i<n;i++){
+    if(sim.turnoActual>=sim.tiempoTotal)break;
+    _ejecutarUnTurno();ejecutados++;
+  }
+  if(sim.turnoActual>=sim.tiempoTotal)_finalizarSim();
+  else showToast(`${ejecutados} turnos ejecutados.`,'success');
+}
+function simDetener(){
+  if(!sim.activa&&!sim.finalizada){showToast('No hay simulación activa.','warn');return;}
+  _finalizarSim();
+}
+function simReiniciar(){
+  // Reinicia pero conserva la configuración de especies/poblaciones/interacciones
+  const pobs=sim.poblaciones,inters=sim.interacciones,espec=sim.especies;
+  sim.reiniciar();
+  sim.poblaciones=pobs;sim.interacciones=inters;sim.especies=espec;
+  // Reset historial de sparklines
+  sim.poblaciones.forEach(p=>{p.historial=[p.cantidad];p.cantidadAnterior=p.cantidad;});
+  document.getElementById('reward-bar').style.display='none';
+  updateAll();updateBtns();setStatus('active','Simulación activa');
+  log('system','🔄 Simulación reiniciada.');showToast('Reiniciada.','success');
+}
+
+function _ejecutarUnTurno(){
+  sim.turnoActual++;
+  const t=sim.turnoActual;
+  const logs=[{t:'system',m:`─── Turno ${t} ───`}];
+  for(const p of sim.poblaciones)p.actualizarPoblacion(logs);
+  for(const i of sim.interacciones){
+    const dep=sim.buscarPob(i.nombreDepredador),presa=sim.buscarPob(i.nombrePresa);
+    if(dep&&presa)i.simularCaza(dep,presa,logs);
+  }
+  sim.entorno.calcularConsumo(sim.poblaciones,logs);
+  // Detectar extinciones
+  for(const p of sim.poblaciones){
+    if(p.cantidad===0&&!sim.extinciones.includes(p.especie.nombre)){
+      sim.extinciones.push(p.especie.nombre);
+      logs.push({t:'extinct',m:`💀 EXTINCIÓN: ${p.especie.nombre} ha desaparecido del ecosistema.`});
+      showToast(`💀 ${p.especie.nombre} se ha extinguido!`,'error');
+    }
+  }
+  const snap={};sim.poblaciones.forEach(p=>{snap[p.especie.nombre]=p.cantidad});
+  sim.historial.push({turno:t,snap,alimento:sim.entorno.alimentoDisponible});
+  logs.forEach(l=>log(l.t,l.m));
+  updateAll();
+}
+
+function _finalizarSim(){
+  sim.activa=false;sim.finalizada=true;
+  setStatus('ended','Finalizada');updateBtns();
+  log('system',`⏹ Finalizada. Turnos: ${sim.turnoActual} | Extinciones: ${sim.extinciones.length}`);
+  if(currentUser instanceof Estudiante){
+    currentUser.simulacionesCompletadas++;
+    const r=currentUser.obtenerRecompensa(sim.turnoActual);
+    showReward(r);showToast(`${r.icon} ${r.text}`,'success');
+  } else showToast('Simulación finalizada.','warn');
+}
+
+function updateBtns(){
+  const a=sim&&sim.activa,f=sim&&sim.finalizada;
+  document.getElementById('btn-iniciar').disabled=a;
+  document.getElementById('btn-turno').disabled=!a||sim.turnoActual>=sim.tiempoTotal;
+  document.getElementById('btn-auto').disabled=!a||sim.turnoActual>=sim.tiempoTotal;
+  document.getElementById('btn-detener').disabled=!a;
+  document.getElementById('btn-reiniciar').disabled=!f;
+}
+
+// ── ELIMINAR POBLACIÓN ───────────────────────────
+function pedirEliminar(nombre){
+  _pendingDel=nombre;
+  document.getElementById('del-nombre-display').textContent=nombre;
+  openModal('modal-confirm-del');
+}
+function confirmarEliminar(){
+  if(!_pendingDel)return;
+  const nombre=_pendingDel;
+  const idxP=sim.poblaciones.findIndex(p=>p.especie.nombre===nombre);
+  if(idxP!==-1){
+    sim.poblaciones.splice(idxP,1);
+    // Eliminar también de especies si no hay otra población con esa especie
+    const aun=sim.poblaciones.some(p=>p.especie.nombre===nombre);
+    if(!aun){const idxE=sim.especies.findIndex(e=>e.nombre===nombre);if(idxE!==-1)sim.especies.splice(idxE,1);}
+    // Eliminar interacciones que involucren esa especie
+    sim.interacciones=sim.interacciones.filter(i=>i.nombreDepredador!==nombre&&i.nombrePresa!==nombre);
+    log('warn',`🗑️ Población de "${nombre}" eliminada de la simulación.`);
+    showToast(`Población de "${nombre}" eliminada.`,'warn');
+  }
+  _pendingDel=null;closeModal('modal-confirm-del');updateAll();
+}
+
+// ── UPDATE UI ────────────────────────────────────
+function updateAll(){
+  updateStats();updatePopGrids();updateInterList();updateEntorno();updateHistorial();updateBtns();updateHealth();
+}
+
+function calcHealth(){
+  if(!sim||!sim.poblaciones.length)return{score:0,label:'Sin datos',color:var_color(0)};
+  const viables=sim.poblaciones.filter(p=>p.cantidad>0).length;
+  const tot=sim.poblaciones.length;
+  let score=Math.round((viables/tot)*100);
+  // Penalizar si alimento en 0
+  if(sim.entorno.alertas.some(a=>a.includes('Colapso')))score=Math.max(0,score-25);
+  // Penalizar por sobrepoblación
+  const sobrepob=sim.poblaciones.filter(p=>p.cantidad>p.limiteEspacio).length;
+  score=Math.max(0,score-sobrepob*8);
+  score=Math.min(100,score);
+  let label=score>=80?'Excelente':score>=60?'Bueno':score>=40?'Regular':score>=20?'Crítico':'Colapso';
+  return{score,label,color:score>=80?'var(--green)':score>=60?'var(--teal)':score>=40?'var(--amber)':'var(--red)'};
+}
+
+function updateHealth(){
+  const h=calcHealth();
+  document.getElementById('hw-val').textContent=h.score+'%';
+  document.getElementById('hw-val').style.color=h.color;
+  const bar=document.getElementById('hw-bar');
+  bar.style.width=h.score+'%';bar.style.background=h.color;
+  document.getElementById('hw-sub').textContent=h.label;
+}
+
+function updateStats(){
+  document.getElementById('s-turno').textContent=sim.turnoActual;
+  document.getElementById('s-total').textContent=sim.tiempoTotal;
+  document.getElementById('s-alimento').textContent=sim.entorno.alimentoDisponible;
+  document.getElementById('s-especies').textContent=sim.poblaciones.filter(p=>p.cantidad>0).length;
+  document.getElementById('s-alertas').textContent=sim.entorno.alertas.length;
+  document.getElementById('s-extinciones').textContent=sim.extinciones.length;
+  document.getElementById('tw-turn').textContent=sim.turnoActual;
+  document.getElementById('tw-total').textContent='de '+sim.tiempoTotal;
+  document.getElementById('turn-bar').style.width=(sim.turnoActual/sim.tiempoTotal*100).toFixed(0)+'%';
+}
+
+const COLORS={Carnivoro:{stripe:'linear-gradient(90deg,#ef4444,#f97316)',bar:'#ef4444',badge:'badge-red'},Herbivoro:{stripe:'linear-gradient(90deg,#22c55e,#16a34a)',bar:'#22c55e',badge:'badge-green'},Planta:{stripe:'linear-gradient(90deg,#14b8a6,#0d9488)',bar:'#14b8a6',badge:'badge-teal'}};
+const ICONS={Carnivoro:'🦁',Herbivoro:'🦌',Planta:'🌿'};
+
+function buildSparkline(hist){
+  if(!hist||hist.length<2)return '';
+  const max=Math.max(...hist,1);
+  return`<div class="pc-sparkline">${hist.map(v=>{const h=Math.round((v/max)*100);const col=v===0?'#ef4444':'rgba(34,197,94,.5)';return`<div class="spark-bar" style="height:${h}%;background:${col}"></div>`}).join('')}</div>`;
+}
+
+function buildPopCard(p,location='inicio'){
+  const col=COLORS[p.especie.tipo]||COLORS.Planta;
+  const pct=Math.min(100,(p.cantidad/p.limiteEspacio*100)).toFixed(0);
+  const diff=p.cantidad-p.cantidadAnterior;
+  const tClass=diff>0?'trend-up':diff<0?'trend-down':'trend-same';
+  const tSym=diff>0?`▲+${diff}`:diff<0?`▼${diff}`:'━';
+  const extinct=p.cantidad===0;
+  return`<div class="pop-card${extinct?' extinct':''}">
+    <div class="pc-stripe" style="background:${col.stripe}"></div>
+    <div class="pc-head">
+      <div>
+        <div class="pc-name">${ICONS[p.especie.tipo]||'?'} ${p.especie.nombre}</div>
+        <span class="badge ${col.badge}" style="margin-top:3px;display:inline-block;font-size:10px">${p.especie.tipo}</span>
+        ${extinct?'<div class="extinct-tag">💀 EXTINTO</div>':''}
+      </div>
+      <span class="trend ${tClass}">${tSym}</span>
+    </div>
+    <div class="pc-count">${p.cantidad}</div>
+    <div class="pc-meta">K = ${p.limiteEspacio} individuos</div>
+    <div class="pc-bar-wrap"><div class="pc-bar" style="width:${pct}%;background:${col.bar}"></div></div>
+    <div class="pc-meta" style="margin-top:4px">${pct}% del límite</div>
+    ${buildSparkline(p.historial)}
+    <div class="pc-actions">
+      <button class="btn btn-red btn-xs" onclick="pedirEliminar('${p.especie.nombre}')">🗑️ Eliminar</button>
+    </div>
+  </div>`;
+}
+
+function updatePopGrids(){
+  const html=sim.poblaciones.length?sim.poblaciones.map(p=>buildPopCard(p)).join('')
+    :'<div class="empty"><div class="e-icon">🐾</div><p>Sin poblaciones. Agrega una con el botón de arriba.</p></div>';
+  document.getElementById('pop-grid-inicio').innerHTML=html;
+  document.getElementById('pop-grid-full').innerHTML=html;
+}
+
+function updateInterList(){
+  const el=document.getElementById('inter-list');
+  if(!sim.interacciones.length){el.innerHTML='<div class="empty"><div class="e-icon">⚡</div><p>Sin interacciones.</p></div>';return;}
+  el.innerHTML=sim.interacciones.map((i,idx)=>`
+    <div class="inter-card">
+      <span style="font-size:22px">${ICONS.Carnivoro}</span>
+      <div class="inter-arrow">→</div>
+      <div class="inter-info">
+        <div class="ii-title">${i.nombreDepredador} <span style="color:var(--text3)">caza a</span> ${i.nombrePresa}</div>
+        <div class="ii-meta">Efic. conversión: ${i.eficienciaConversion}</div>
+      </div>
+      <div class="inter-stat"><div class="is-num">${(i.factorCaza*100).toFixed(0)}%</div><div class="is-label">Factor caza</div></div>
+      <button class="btn btn-red btn-xs" onclick="eliminarInteraccion(${idx})" title="Eliminar">✕</button>
+    </div>`).join('');
+}
+
+function eliminarInteraccion(idx){
+  const i=sim.interacciones[idx];
+  sim.interacciones.splice(idx,1);
+  log('warn',`🗑️ Interacción "${i.nombreDepredador}→${i.nombrePresa}" eliminada.`);
+  showToast(`Interacción eliminada.`,'warn');updateAll();
+}
+
+function updateEntorno(){
+  document.getElementById('e-alimento').textContent=sim.entorno.alimentoDisponible;
+  document.getElementById('e-tasa').textContent=sim.entorno.tasaConsumo;
+  document.getElementById('e-regen').textContent=sim.entorno.regeneracionVegetal;
+  const al=document.getElementById('alerts-list');
+  if(!sim.entorno.alertas.length){al.innerHTML='<div class="no-alerts">✅ Sin alertas activas.</div>';return;}
+  al.innerHTML=sim.entorno.alertas.map(a=>{
+    const w=a.includes('Sobrepoblación'),c=a.includes('Colapso');
+    return`<div class="alert-item${w?' warn':''}">${c?'<span class="alert-icon">🚨</span>':w?'<span class="alert-icon">⚠️</span>':'<span class="alert-icon">ℹ️</span>'}<span class="alert-msg">${a}</span></div>`;
+  }).join('');
+}
+
+function updateHistorial(){
+  const body=document.getElementById('hist-body'),empty=document.getElementById('hist-empty'),tbl=document.getElementById('hist-table');
+  if(!sim.historial.length){empty.style.display='block';tbl.style.display='none';return;}
+  empty.style.display='none';tbl.style.display='table';
+  const nombres=Object.keys(sim.historial[0].snap);
+  document.getElementById('hist-thead').innerHTML=`<th>Turno</th>${nombres.map(n=>`<th>${n}</th>`).join('')}<th>Alimento</th>`;
+  body.innerHTML=sim.historial.map(h=>`<tr><td><strong>${h.turno}</strong></td>${nombres.map(n=>`<td>${h.snap[n]??'—'}</td>`).join('')}<td>${h.alimento}</td></tr>`).join('');
+}
+
+// ── AGREGAR ESPECIE ──────────────────────────────
+function agregarEspecie(){
+  const nombre=document.getElementById('ag-nombre').value.trim();
+  const tipo=document.getElementById('ag-tipo').value;
+  const r=parseFloat(document.getElementById('ag-rep').value);
+  const m=parseFloat(document.getElementById('ag-mort').value);
+  const cant=parseInt(document.getElementById('ag-cant').value);
+  const lim=parseInt(document.getElementById('ag-limite').value);
+  const msg=document.getElementById('ag-msg');
+  if(!nombre){showFMsg(msg,'error','El nombre es obligatorio.');return;}
+  if(isNaN(r)||r<0||r>1||isNaN(m)||m<0||m>1){showFMsg(msg,'error','Tasas deben estar entre 0.0 y 1.0');return;}
+  if(isNaN(cant)||cant<1||isNaN(lim)||lim<1){showFMsg(msg,'error','Cantidad y límite deben ser positivos.');return;}
+  if(sim.especies.some(e=>e.nombre.toLowerCase()===nombre.toLowerCase())){showFMsg(msg,'error',`"${nombre}" ya existe en la simulación.`);return;}
+  const bv=r-m;
+  if(bv<0){showFMsg(msg,'warn',`⚠ Balance vital negativo (${bv.toFixed(3)}). Riesgo de extinción.`);}
+  else msg.style.display='none';
+  const esp=new Especie(nombre,tipo,r,m);
+  sim.especies.push(esp);
+  sim.poblaciones.push(new Poblacion(cant,lim,esp));
+  log('info',`Especie "${nombre}" (${tipo}) registrada. r=${r}, m=${m}`);
+  showToast(`"${nombre}" registrada.`,'success');
+  ['ag-nombre','ag-rep','ag-mort','ag-cant','ag-limite'].forEach(id=>document.getElementById(id).value='');
+  updateAll();
+}
+
+// ── BUSCAR ESPECIE ───────────────────────────────
+function buscarEspecie(){
+  const nombre=document.getElementById('buscar-inp').value.trim();
+  const e=sim.especies.find(x=>x.nombre.toLowerCase()===nombre.toLowerCase());
+  const res=document.getElementById('buscar-result');
+  if(!e){res.innerHTML=`<div class="empty"><div class="e-icon">🔍</div><p>"${nombre}" no encontrada.</p></div>`;return;}
+  const bv=e.balanceVital();const pob=sim.poblaciones.find(p=>p.especie===e);
+  res.innerHTML=`<div class="stat-card" style="max-width:420px">
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px">
+      <div style="font-size:38px">${ICONS[e.tipo]||'?'}</div>
+      <div><div style="font-size:18px;font-weight:800">${e.nombre}</div>
+        <span class="badge ${(COLORS[e.tipo]||COLORS.Planta).badge}">${e.tipo}</span></div>
+    </div>
+    <div class="stat-row">
+      <div><div class="sc-label">Reproducción</div><div class="sc-val sc-green">${e.tasaReproduccion}</div></div>
+      <div><div class="sc-label">Mortalidad</div><div class="sc-val sc-red">${e.tasaMortalidad}</div></div>
+      <div><div class="sc-label">Balance vital</div><div class="sc-val ${bv>=0?'sc-green':'sc-red'}">${bv.toFixed(3)}</div>
+        <div class="sc-sub">${bv>=0?'✓ Viable':'⚠ Riesgo extinción'}</div></div>
+      ${pob?`<div><div class="sc-label">Población</div><div class="sc-val sc-teal">${pob.cantidad}</div><div class="sc-sub">K=${pob.limiteEspacio}</div></div>`:''}
+    </div></div>`;
+}
+
+// ── MODALS ───────────────────────────────────────
+function openModal(id){
+  if(id==='modal-add-pop'){
+    const sel=document.getElementById('mp-especie');
+    sel.innerHTML=sim.especies.map(e=>`<option>${e.nombre}</option>`).join('');
+    if(!sim.especies.length){showToast('Agrega al menos una especie primero.','warn');return;}
+  }
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function closeModalOutside(ev,id){if(ev.target.id===id)closeModal(id)}
+
+function modalAgregarPob(){
+  const en=document.getElementById('mp-especie').value;
+  const cant=parseInt(document.getElementById('mp-cant').value);
+  const lim=parseInt(document.getElementById('mp-limite').value);
+  if(isNaN(cant)||cant<1||isNaN(lim)||lim<1){showToast('Valores inválidos.','error');return;}
+  const esp=sim.especies.find(e=>e.nombre===en);
+  if(!esp){showToast('Especie no encontrada.','error');return;}
+  if(sim.poblaciones.some(p=>p.especie===esp)){showToast(`Ya existe población de "${en}".`,'warn');return;}
+  sim.poblaciones.push(new Poblacion(cant,lim,esp));
+  log('info',`Población de "${en}": ${cant} individuos (K=${lim})`);
+  showToast(`Población de "${en}" agregada.`,'success');
+  closeModal('modal-add-pop');updateAll();
+}
+
+function modalAgregarInter(){
+  const dep=document.getElementById('mi-dep').value.trim(),presa=document.getElementById('mi-presa').value.trim();
+  const fc=parseFloat(document.getElementById('mi-fc').value),ef=parseFloat(document.getElementById('mi-ef').value);
+  if(!dep||!presa){showToast('Nombres obligatorios.','error');return;}
+  if(dep===presa){showToast('Depredador y presa deben ser distintos.','error');return;}
+  if(isNaN(fc)||fc<0||fc>1||isNaN(ef)||ef<0||ef>1){showToast('Factores deben estar entre 0 y 1.','error');return;}
+  sim.interacciones.push(new Interaccion(dep,presa,fc,ef));
+  log('action',`Interacción: ${dep} → ${presa} (fc=${fc}, ef=${ef})`);
+  showToast(`"${dep}→${presa}" registrada.`,'success');
+  closeModal('modal-add-inter');updateAll();
+  ['mi-dep','mi-presa','mi-fc','mi-ef'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ── REPORTE ──────────────────────────────────────
+function generarReporte(){
+  const sep='═'.repeat(48);
+  let r=`${sep}\n   REPORTE — ECOSISTEMA ${ecoType.toUpperCase()}\n${sep}\n`;
+  r+=`Fecha       : ${new Date().toLocaleString('es-EC')}\n`;
+  r+=`Usuario     : ${currentUser.nombreCompleto} [${currentUser.rol}]\n`;
+  r+=`Turnos ejec.: ${sim.turnoActual} / ${sim.tiempoTotal}\n`;
+  r+=`Estado      : ${sim.activa?'ACTIVA':sim.finalizada?'FINALIZADA':'SIN INICIAR'}\n\n`;
+
+  r+=`${'─'.repeat(48)}\nESTADO DE POBLACIONES\n${'─'.repeat(48)}\n`;
+  for(const p of sim.poblaciones){
+    const pct=Math.min(100,(p.cantidad/p.limiteEspacio*100)).toFixed(1);
+    r+=`  ${p.especie.nombre.padEnd(12)} ${p.especie.tipo.padEnd(10)} Cant:${String(p.cantidad).padStart(5)}  K:${String(p.limiteEspacio).padStart(5)}  ${pct}%${p.cantidad===0?' ⚠ EXTINTO':''}\n`;
+  }
+
+  r+=`\n${'─'.repeat(48)}\nINTERACCIONES\n${'─'.repeat(48)}\n`;
+  for(const i of sim.interacciones)
+    r+=`  ${i.nombreDepredador.padEnd(10)} → ${i.nombrePresa.padEnd(10)} FC:${i.factorCaza}  EC:${i.eficienciaConversion}\n`;
+
+  r+=`\n${'─'.repeat(48)}\nENTORNO\n${'─'.repeat(48)}\n`;
+  r+=`  Alimento disponible  : ${sim.entorno.alimentoDisponible}\n`;
+  r+=`  Tasa de consumo      : ${sim.entorno.tasaConsumo}\n`;
+  r+=`  Regeneración vegetal : ${sim.entorno.regeneracionVegetal}\n`;
+  if(sim.entorno.alertas.length){
+    r+=`  Alertas activas      :\n`;
+    sim.entorno.alertas.forEach(a=>r+=`    ⚠ ${a}\n`);
+  }
+
+  if(sim.extinciones.length){
+    r+=`\n${'─'.repeat(48)}\nEXTINCIONES OCURRIDAS\n${'─'.repeat(48)}\n`;
+    sim.extinciones.forEach(e=>r+=`  💀 ${e}\n`);
+  }
+
+  const h=calcHealth();
+  r+=`\n${'─'.repeat(48)}\nSALUD DEL ECOSISTEMA: ${h.score}% — ${h.label}\n`;
+  r+=`${sep}\n`;
+
+  const out=document.getElementById('report-output');
+  out.textContent=r;out.style.display='block';
+  document.getElementById('report-empty').style.display='none';
+}
+function copiarReporte(){
+  const txt=document.getElementById('report-output').textContent;
+  if(!txt){showToast('Genera el reporte primero.','warn');return;}
+  navigator.clipboard.writeText(txt).then(()=>showToast('Reporte copiado al portapapeles.','success')).catch(()=>showToast('No se pudo copiar.','error'));
+}
+
+// ── ADMIN ────────────────────────────────────────
+function adminTab(el,id){
+  document.querySelectorAll('#panel-admin .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  ['tab-todos','tab-paralelo','tab-cedula','tab-registrar'].forEach(t=>{const el2=document.getElementById(t);if(el2)el2.style.display='none';});
+  const target=document.getElementById(id);if(target)target.style.display='block';
+  if(id==='tab-todos')renderTodos();
+}
+function renderTodos(){
+  const cnt=document.getElementById('admin-user-count');if(cnt)cnt.textContent=`${usuarios.length} usuarios`;
+  document.getElementById('admin-todos-result').innerHTML=`<h4>👥 Todos los Usuarios</h4>`+buildUserTable(usuarios);
+}
+function adminBuscarParalelo(){
+  const p=document.getElementById('admin-paralelo').value.trim().toUpperCase();
+  const lista=usuarios.filter(u=>u instanceof Estudiante&&u.paralelo===p);
+  const d=document.getElementById('admin-paralelo-result');d.style.display='block';
+  d.innerHTML=lista.length?`<h4>Paralelo ${p} (${lista.length})</h4>`+buildUserTable(lista)
+    :`<div class="empty" style="padding:16px"><p>No hay estudiantes en "${p}".</p></div>`;
+}
+function adminBuscarCedula(){
+  const c=document.getElementById('admin-cedula').value.trim();
+  const u=usuarios.find(x=>x.cedula===c);
+  const d=document.getElementById('admin-cedula-result');d.style.display='block';
+  d.innerHTML=u?`<h4>Usuario encontrado</h4>`+buildUserTable([u])
+    :`<div class="empty" style="padding:16px"><p>No se encontró cédula "${c}".</p></div>`;
+}
+function buildUserTable(lista){
+  return`<div style="overflow-x:auto"><table class="user-table">
+    <thead><tr><th>Nombre</th><th>Cédula</th><th>Rol</th><th>Paralelo</th><th>Estado</th><th>Sims</th></tr></thead>
+    <tbody>${lista.map(u=>`<tr>
+      <td>${u.nombreCompleto}</td><td>${u.cedula}</td>
+      <td><span class="badge ${u.rol==='admin'?'badge-purple':'badge-green'}">${u.rol}</span></td>
+      <td>${u.paralelo||'—'}</td>
+      <td><span class="badge ${u.estaActivo()?'badge-teal':'badge-red'}">${u.estado}</span></td>
+      <td>${u.simulacionesCompletadas||'0'}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+function toggleParaleloAdmin(){
+  const rol=document.getElementById('ar-rol').value,w=document.getElementById('ar-par-wrap');
+  w.style.opacity=rol==='admin'?'0.3':'1';w.style.pointerEvents=rol==='admin'?'none':'auto';
+  if(rol==='admin')document.getElementById('ar-paralelo').value='';
+}
+function adminRegistrarUsuario(){
+  const n=v('ar-nombre'),c=v('ar-cedula'),co=v('ar-correo'),u=v('ar-usr'),p=v('ar-pass');
+  const rol=document.getElementById('ar-rol').value,par=v('ar-paralelo');
+  const msg=document.getElementById('ar-msg');
+  const r=_crearUsuario(n,c,co,u,p,rol,par,msg);
+  if(!r)return;
+  const label=rol==='admin'?'Administrador':'Estudiante';
+  showFMsg(msg,'success',`✅ ${label} "${n}" registrado.`);
+  log('system',`Nuevo ${label}: ${n} (${u})`);showToast(`"${u}" registrado.`,'success');
+  ['ar-nombre','ar-cedula','ar-correo','ar-usr','ar-pass','ar-paralelo'].forEach(id=>document.getElementById(id).value='');
+  renderTodos();
+}
+
+// ── REGISTRO LOGIN ───────────────────────────────
+function abrirRegistro(rol){
+  _regRol=rol;const esA=rol==='admin';
+  document.getElementById('reg-titulo').textContent=esA?'👑 Cuenta Admin':'🎓 Cuenta Estudiante';
+  const ban=document.getElementById('reg-banner');
+  ban.style.cssText=esA
+    ?'background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);color:var(--purple);padding:7px 12px;border-radius:9px;font-size:12px;font-weight:600;text-align:center;margin-bottom:12px'
+    :'background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);color:var(--green);padding:7px 12px;border-radius:9px;font-size:12px;font-weight:600;text-align:center;margin-bottom:12px';
+  ban.textContent=esA?'👑 Registrando Administrador':'🎓 Registrando Estudiante';
+  document.getElementById('reg-par-wrap').style.display=esA?'none':'block';
+  document.getElementById('reg-btn').className='btn btn-sm '+(esA?'btn-purple':'btn-primary');
+  ['reg-nombre','reg-cedula','reg-correo','reg-usr','reg-pass','reg-paralelo'].forEach(id=>document.getElementById(id).value='');
+  const m=document.getElementById('reg-msg');m.style.display='none';m.className='form-msg';
+  openModal('modal-registro');
+}
+function autoRegistro(){
+  const n=v('reg-nombre'),c=v('reg-cedula'),co=v('reg-correo'),u=v('reg-usr'),p=v('reg-pass'),par=v('reg-paralelo');
+  const msg=document.getElementById('reg-msg');
+  const r=_crearUsuario(n,c,co,u,p,_regRol,par,msg);
+  if(!r)return;
+  closeModal('modal-registro');
+  document.getElementById('inp-user').value=u;document.getElementById('inp-pass').value=p;
+  const label=_regRol==='admin'?'Admin':'Estudiante';
+  showToast(`✅ ${label} "${n}" creado.`,'success');
+}
+
+// ── VALIDACIÓN Y CREACIÓN ────────────────────────
+function _crearUsuario(n,c,co,u,p,rol,par,msgEl){
+  if(!n||!c||!co||!u||!p){showFMsg(msgEl,'error','⚠ Todos los campos son obligatorios.');return null;}
+  if(p.length<4){showFMsg(msgEl,'error','⚠ Contraseña: mínimo 4 caracteres.');return null;}
+  if(/\s/.test(u)){showFMsg(msgEl,'error','⚠ El usuario no puede tener espacios.');return null;}
+  if(!co.includes('@')){showFMsg(msgEl,'error','⚠ Correo inválido (debe incluir @).');return null;}
+  if(usuarios.some(x=>x.nombreUsuario===u)){showFMsg(msgEl,'error',`⚠ El usuario "${u}" ya existe.`);return null;}
+  if(usuarios.some(x=>x.cedula===c)){showFMsg(msgEl,'error',`⚠ Cédula "${c}" ya registrada.`);return null;}
+  if(rol==='estudiante'&&!par){showFMsg(msgEl,'error','⚠ El paralelo es obligatorio para estudiantes.');return null;}
+  let nuevo;
+  if(rol==='admin')nuevo=new Administrador(n,c,co,u,p,'Activo');
+  else nuevo=new Estudiante(n,c,co,u,p,'Activo',par.toUpperCase());
+  usuarios.push(nuevo);return nuevo;
+}
+
+// ── REWARD ───────────────────────────────────────
+function showReward(r){
+  const rb=document.getElementById('reward-bar');rb.style.display='flex';
+  document.getElementById('reward-icon').textContent=r.icon;
+  document.getElementById('reward-text').textContent=r.text;
+}
+
+// ── HELPERS ──────────────────────────────────────
+function showFMsg(el,type,msg){el.className=`form-msg ${type}`;el.style.display='block';el.textContent=msg;}
+function v(id){return document.getElementById(id).value.trim()}
+function var_color(s){return s>=80?'var(--green)':s>=60?'var(--teal)':s>=40?'var(--amber)':'var(--red)'}
+function setStatus(state,text){
+  document.getElementById('status-dot').className='status-dot'+(state?' '+state:'');
+  document.getElementById('status-text').textContent=text;
+}
+function log(type,msg){
+  const c=document.getElementById('console-log');
+  const ts=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const d=document.createElement('div');d.className='log-line';
+  d.innerHTML=`<span class="log-ts">${ts}</span><span class="log-${type}">${msg}</span>`;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function limpiarConsola(){document.getElementById('console-log').innerHTML='';log('system','Consola limpiada.');}
+function showPanel(name){
+  document.querySelectorAll('[id^="panel-"]').forEach(p=>p.style.display='none');
+  const p=document.getElementById('panel-'+name);if(p)p.style.display='block';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const nav=document.getElementById('nav-'+name);if(nav)nav.classList.add('active');
+  if(name==='admin'&&currentUser&&currentUser.rol==='admin')renderTodos();
+  updateAll();
+}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function logout(){
+  currentUser=null;sim=null;ecoType=null;
+  document.getElementById('inp-user').value='';document.getElementById('inp-pass').value='';
+  document.getElementById('login-error').style.display='none';
+  document.querySelectorAll('.admin-only').forEach(el=>el.classList.add('hidden'));
+  showScreen('screen-login');
+}
+function showToast(msg,type='success'){
+  const tc=document.getElementById('toast-container');
+  const t=document.createElement('div');t.className=`toast toast-${type}`;t.textContent=msg;
+  tc.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+</script>
+</body>
+</html>

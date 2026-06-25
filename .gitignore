@@ -1,0 +1,18 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+target/
+
+# NetBeans
+nbproject/
+build/
+dist/
+nbbuild/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
