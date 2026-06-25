@@ -213,6 +213,21 @@
     /* ── EMPTY ── */
     .empty{text-align:center;padding:32px;color:var(--text3)}.empty .e-icon{font-size:36px;margin-bottom:9px}.empty p{font-size:13px;line-height:1.6}
 
+    /* ── TUTORIAL ── */
+    .tutorial-steps{display:flex;flex-direction:column;gap:12px;margin:6px 0 18px}
+    .tut-step{display:flex;align-items:flex-start;gap:13px;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;transition:border-color .2s}
+    .tut-step:hover{border-color:rgba(34,197,94,.25)}
+    .tut-num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--teal));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;margin-top:1px}
+    .tut-icon{font-size:22px;flex-shrink:0}
+    .tut-title{font-size:13px;font-weight:700;margin-bottom:3px}
+    .tut-desc{font-size:12px;color:var(--text2);line-height:1.55}
+    .tut-tag{display:inline-block;padding:1px 7px;border-radius:100px;font-size:10px;font-weight:700;background:rgba(34,197,94,.12);color:var(--green);margin-right:4px;margin-top:4px}
+    .tut-tag.red{background:rgba(239,68,68,.1);color:var(--red)}
+    .tut-tag.amber{background:rgba(245,158,11,.1);color:var(--amber)}
+    .tut-tag.blue{background:rgba(59,130,246,.1);color:var(--blue)}
+    .no-pop-warning{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius);padding:13px 16px;display:none;align-items:center;gap:12px}
+    .no-pop-warning.show{display:flex;animation:slideIn .3s ease}
+
     /* ── TOAST ── */
     #toast-container{position:fixed;bottom:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:340px}
     .toast{background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:10px 15px;font-size:13px;font-weight:500;box-shadow:var(--shadow);animation:slideUp .26s ease;pointer-events:all}
@@ -309,6 +324,7 @@
         <span class="user-name" id="user-name-display">—</span>
         <span class="role-badge" id="role-badge">—</span>
       </div>
+      <button class="btn btn-ghost btn-sm" onclick="openModal('modal-tutorial')" title="Cómo usar EcoSim">❓ Ayuda</button>
       <button class="btn btn-ghost btn-sm" onclick="logout()">Salir</button>
     </div>
   </div>
@@ -368,7 +384,15 @@
           <div class="stat-card sc-r"><div class="sc-label">Alertas</div><div class="sc-val sc-red" id="s-alertas">0</div><div class="sc-sub">activas</div></div>
           <div class="stat-card sc-a"><div class="sc-label">Extinciones</div><div class="sc-val sc-amber" id="s-extinciones">0</div><div class="sc-sub">en esta sim.</div></div>
         </div>
-        <div class="panel-title" style="margin-top:4px">🐾 Poblaciones
+        <!-- Aviso: sin poblaciones -->
+        <div class="no-pop-warning" id="no-pop-warn">
+          <span style="font-size:22px">⚠️</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--amber)">No hay poblaciones registradas</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Debes agregar al menos una población antes de iniciar la simulación. Usa el botón <strong>"+ Nueva"</strong> o ve al panel <strong>"➕ Agregar Especie"</strong>.</div>
+          </div>
+        </div>
+        <div class="panel-title" style="margin-top:8px">🐾 Poblaciones
           <button class="btn btn-teal btn-sm" onclick="openModal('modal-add-pop')" style="margin-left:auto">+ Nueva</button>
         </div>
         <div class="pop-grid" id="pop-grid-inicio"></div>
@@ -593,6 +617,67 @@
   </div>
 </div>
 
+<!-- ════════ MODAL: TUTORIAL ════════ -->
+<div class="modal-overlay" id="modal-tutorial" onclick="closeModalOutside(event,'modal-tutorial')">
+  <div class="modal" style="max-width:580px">
+    <h3>📖 ¿Cómo usar EcoSim?</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Sigue estos pasos para simular un ecosistema completo:</p>
+    <div class="tutorial-steps">
+      <div class="tut-step">
+        <div class="tut-num">1</div>
+        <div class="tut-icon">🌍</div>
+        <div><div class="tut-title">Elige tu ecosistema</div>
+          <div class="tut-desc">Al ingresar seleccionas <strong>Terrestre</strong> (León, Lobo, Ciervo, Conejo, Hierba) o <strong>Marino</strong> (Tiburón, Orca, Pez, Calamar, Alga, Coral). Cada uno viene con especies y poblaciones precargadas.</div></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">2</div>
+        <div class="tut-icon">🐾</div>
+        <div><div class="tut-title">Gestiona las poblaciones</div>
+          <div class="tut-desc">Puedes <strong>eliminar</strong> poblaciones que no quieras con el botón 🗑️ en cada tarjeta, o <strong>agregar nuevas especies</strong> desde el panel <em>"➕ Agregar Especie"</em>. También puedes añadir poblaciones extra con el botón <em>"+ Nueva"</em>.</div>
+          <div><span class="tut-tag">🗑️ Eliminar</span><span class="tut-tag blue">➕ Agregar</span></div></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">3</div>
+        <div class="tut-icon">⚡</div>
+        <div><div class="tut-title">Configura las interacciones</div>
+          <div class="tut-desc">Las interacciones definen quién caza a quién. Ve al panel <em>"⚡ Interacciones"</em> para ver las predefinidas, agregar nuevas o eliminar las que no quieras. Define el <strong>Factor de caza</strong> (0–1) y la <strong>Eficiencia de conversión</strong> (0–1).</div></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">4</div>
+        <div class="tut-icon">▶️</div>
+        <div><div class="tut-title">Inicia la simulación</div>
+          <div class="tut-desc">Haz clic en <strong>"▶ Iniciar"</strong>. <em>Requisito:</em> debes tener al menos 1 población registrada. Si no hay ninguna, el sistema te lo indicará.</div>
+          <div><span class="tut-tag red">⚠ Mínimo 1 población</span></div></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">5</div>
+        <div class="tut-icon">⏭️</div>
+        <div><div class="tut-title">Avanza por turnos</div>
+          <div class="tut-desc">Usa <strong>"⏭ Turno"</strong> para avanzar de uno en uno, o el campo <strong>"Auto ▶▶"</strong> para ejecutar varios turnos de golpe (ej: 3, 5, 10). Cada turno actualiza las poblaciones, simula las cazas y consume recursos del entorno.</div>
+          <div><span class="tut-tag blue">⏭ Turno a turno</span><span class="tut-tag amber">▶▶ Auto N turnos</span></div></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">6</div>
+        <div class="tut-icon">📊</div>
+        <div><div class="tut-title">Monitorea el ecosistema</div>
+          <div class="tut-desc">Observa la <strong>Salud del Ecosistema</strong> (0–100%) en el sidebar, las <strong>alertas de sobrepoblación o colapso</strong> en el panel Entorno, y el <strong>historial de turnos</strong> con los datos de cada especie. Si una especie llega a 0, recibirás una alerta de <strong>💀 extinción</strong>.</div></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">7</div>
+        <div class="tut-icon">📋</div>
+        <div><div class="tut-title">Genera el reporte final</div>
+          <div class="tut-desc">Al terminar, ve al panel <em>"📋 Reporte"</em> para generar un resumen completo con el estado de todas las poblaciones, extinciones, alertas y salud del ecosistema. Puedes <strong>copiar</strong> el reporte al portapapeles.</div></div>
+      </div>
+    </div>
+    <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:11px 14px;font-size:12px;color:var(--text2);margin-bottom:4px">
+      💡 <strong style="color:var(--green)">Tip:</strong> Si eres <strong>Administrador</strong>, tienes acceso al panel de usuarios para gestionar estudiantes. Los <strong>Estudiantes</strong> reciben recompensas 🏆 al completar simulaciones.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('modal-tutorial')">¡Entendido, comenzar! →</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container"></div>
 
 <!-- ════════════════════════════════════
@@ -739,11 +824,26 @@ function initDashboard(){
   log('system',`Bienvenido/a ${currentUser.nombreCompleto} [${currentUser.rol.toUpperCase()}]`);
   log('info',`Ecosistema ${ecoType}: ${sim.especies.length} especies, ${sim.interacciones.length} interacciones`);
   log('system','Puedes agregar/eliminar poblaciones antes o durante la simulación.');
+  // Mostrar tutorial solo la primera vez por sesión
+  if(!sessionStorage.getItem('eco_tutorial_seen')){openModal('modal-tutorial');sessionStorage.setItem('eco_tutorial_seen','1');}
 }
 
 // ── SIM CONTROL ──────────────────────────────────
 function simIniciar(){
   if(sim.activa){showToast('La simulación ya está activa.','warn');return;}
+  // ── Validación: debe haber al menos 1 población ──
+  if(!sim.poblaciones||sim.poblaciones.length===0){
+    const warn=document.getElementById('no-pop-warn');
+    if(warn){warn.classList.add('show');setTimeout(()=>warn.classList.remove('show'),4500);}
+    showToast('⚠ Debes agregar al menos una población antes de iniciar.','error');
+    log('error','No se puede iniciar: no hay poblaciones registradas. Ve a "➕ Agregar Especie" o usa el botón "+ Nueva".');
+    showPanel('inicio');
+    return;
+  }
+  // ── Advertencia: simular sin interacciones ──
+  if(sim.interacciones.length===0){
+    showToast('ℹ Sin interacciones definidas. La simulación solo actualizará poblaciones.','info');
+  }
   sim.reiniciar();updateAll();updateBtns();setStatus('active','Simulación activa');
   log('system','▶ Simulación iniciada.');showToast('Simulación iniciada.','success');
 }
